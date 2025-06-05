@@ -1,33 +1,41 @@
-// // Drama name
-// // This select whole parent
-// // document.querySelector('.review > div:nth-child(1)')
+// depends on dataScraper.js in my extension which now is disabled
+// fetch("http://localhost:3000/api/data")
+//   .then(res => res.json())
+//   .then(data => {
+//     console.log("Received data from backend:", data);
+//   });
 
-// // Specifically drama name <a> tag
-// const dramasNamesEl = document.querySelectorAll('.review > div:nth-child(1) b a')
+const reviewsContainer = document.querySelector('#reviews-container')
 
+async function fetchReviews() {
+  const res = await fetch('http://localhost:3000/api/userreviews');
+  const data = await res.json();
+  console.log('fetched data from /api/userreviews:', data)
+  return data;
+}
 
-// // Whole scores for story, acting etc
-// // document.querySelector('.review-body .review-rating')
-// // Specifically story score <span> element
-// const dramasStoryRatingEl = document.querySelectorAll('.review-body .review-rating div:nth-child(1) span')
+async function fetchAndDisplayReviews() {
+  try {
+    const reviews = await fetchReviews()
+    // console.log(reviews)
+    reviewsContainer.innerHTML = '';
 
+    // Create HTML string for all reviews
+    let reviewsHTML = '';
+    reviews.forEach(review => {
+      reviewsHTML += `
+            <div class="review">
+              <h3>${review.name}</h3>
+              <p>Score: <span class="score">${review.score}</span></p>
+            </div>
+          `;
+    });
 
+    // Insert all reviews at once using insertAdjacentHTML
+    reviewsContainer.insertAdjacentHTML('beforeend', reviewsHTML);
 
-// // App
-
-// for (let i = 0; i < dramasNamesEl.length; i++) {
-//   const name = dramasNamesEl[i].textContent;
-//   const rating = dramasStoryRatingEl[i].textContent;
-//   console.log(`${name} story: ${rating}`);
-// }
-
-// TODO get 2 numbers how many dramas scored
-// a) below 5
-// b) above 5
-
-fetch("http://localhost:3000/api/data")
-  .then(res => res.json())
-  .then(data => {
-    console.log("Received data:", data);
-    // Do something with it
-  });
+  } catch (error) {
+    console.log('error', error)
+  }
+}
+fetchAndDisplayReviews();

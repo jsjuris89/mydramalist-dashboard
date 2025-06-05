@@ -1,13 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-</head>
-<body>
-  <h1>Hello</h1>
+  <title>Mydramalist User Reviews</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #e0e0e0;
+      font-family: Arial, sans-serif;
+    }
 
-  <script src="app"></script>
+    .review {
+      background-color: #1e1e1e;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>User Reviews</h1>
+  <div id="reviews-container">
+    <p class="loading">Loading reviews...</p>
+  </div>
+
+  <script src="app.js"></script>
 </body>
+
 </html>
