@@ -63,6 +63,7 @@ app.post('/api/userreviews', (req, res) => {
 
   });
   console.log('END userReviews[0]:', userReviews[0])
+  console.log('END userReviews[1]:', userReviews[1])
   res.sendStatus(200);
 });
 

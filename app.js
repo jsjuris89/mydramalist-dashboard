@@ -16,24 +16,27 @@ async function fetchReviews() {
 
 async function fetchAndDisplayReviews() {
   try {
-    const reviews = await fetchReviews()
-    // console.log(reviews)
+    const dramas = await fetchReviews()
     reviewsContainer.innerHTML = '';
-
     // Create HTML string for all reviews
     let reviewsHTML = '';
-    reviews.forEach(review => {
-      reviewsHTML += `
-            <div class="review">
-              <h3>${review.name}</h3>
-              <p>Score: <span class="score">${review.score}</span></p>
-            </div>
-          `;
-    });
 
+    dramas.forEach(drama => {
+      const dramaName = Object.keys(drama)[0]
+      const reviewersArr = drama[dramaName]
+
+      reviewsHTML += `<h1>${dramaName}</h1>`
+      reviewersArr.forEach(review => {
+        reviewsHTML += `
+              <div class="review">
+                <h3>${review.reviewer}</h3>
+                <p>Score: <span class="score">${review.score}</span></p>
+              </div>
+            `;
+      })
+    });
     // Insert all reviews at once using insertAdjacentHTML
     reviewsContainer.insertAdjacentHTML('beforeend', reviewsHTML);
-
   } catch (error) {
     console.log('error', error)
   }
