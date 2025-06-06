@@ -10,18 +10,21 @@ const reviewsContainer = document.querySelector('#reviews-container')
 async function fetchReviews() {
   const res = await fetch('http://localhost:3000/api/userreviews');
   const data = await res.json();
-  console.log('fetched data from /api/userreviews:', data)
+  console.log('STEP 1 - fetched data from /api/userreviews:', data)
+  localStorage.setItem('reviews', JSON.stringify(data));
   return data;
 }
 
 async function fetchAndDisplayReviews() {
   try {
-    const dramas = await fetchReviews()
+    await fetchReviews()
+    const savedReviews = JSON.parse(localStorage.getItem('reviews')) || [];
+    console.log('STEP 2 - reviews from localStorage:', savedReviews)
     reviewsContainer.innerHTML = '';
     // Create HTML string for all reviews
     let reviewsHTML = '';
 
-    dramas.forEach(drama => {
+    savedReviews.forEach(drama => {
       const dramaName = Object.keys(drama)[0]
       const reviewersArr = drama[dramaName]
 
