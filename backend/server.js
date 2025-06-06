@@ -5,6 +5,7 @@ const app = express();
 // Middleware
 app.use(cors()); // Allow requests from extension
 app.use(express.json()); // Parse JSON body
+app.use(express.text()); // This handles text/plain content-type
 
 let storedData = [];
 let userReviews = [];
@@ -17,51 +18,60 @@ let userReviews = [];
 // });
 
 app.post('/api/userreviews', (req, res) => {
-  req.body.forEach(newReview => {
-    const dramaNameKey = newReview.dramaName.replace(/\s+/g, '_'); // Replace spaces with underscores
-    // each item in userReviews array is an object that consists of single key that is just the drama name
-    const existingDramaIndex = userReviews.findIndex(item => item.hasOwnProperty(dramaNameKey));
-    // STEP 1: check if userReviews have drama object that has SINGLE key with dramaNameKey
-    if (existingDramaIndex === -1) {
-      // creating drama very first entry with 1st review
-      // Happens ONCE!!
-      const newDramaEntry = {
-        [dramaNameKey]: [{
-          reviewer: newReview.reviewer,
-          score: newReview.score
-        }]
-      }
-      userReviews.push(newDramaEntry)
-      // STEP 1.5: key === dramaNameKey now we:
-      // a) add new review
-      // b) edit existing review
-    } else {  
-      console.log('elseeeeeee...')
-      // CASE B: update an existing review object
-      const existingReviewerIndex = userReviews[existingDramaIndex][dramaNameKey].findIndex(reviewerObj => reviewerObj.reviewer === newReview.reviewer)
-      // console.log('elseee INDEX --->', existingReviewerIndex)
-      // console.log('1 --->', userReviews);
-      // console.log('2 --->', userReviews[existingDramaIndex]);
-      // console.log('3 --->', userReviews[existingDramaIndex][dramaNameKey]);
+  console.log('req.body --->', req.body)
+  if (typeof req.body === 'string') {
+    console.log('Received data is a string')
+  }
 
-      if (existingReviewerIndex >= 0) {
-        console.log('EDIT REVIEW...')
-        console.log('checking:', userReviews[existingDramaIndex][dramaNameKey][existingReviewerIndex])
-        console.log('new value:', newReview)
-        userReviews[existingDramaIndex][dramaNameKey][existingReviewerIndex].score = newReview.score
-      }
-      // CASE A: add a brand new review
-      if (existingReviewerIndex === -1) {
-        console.log('NEW REVIEW...')
-        console.log('new reviewer obj:', newReview)
-        userReviews[existingDramaIndex][dramaNameKey].push({
-          reviewer: newReview.reviewer,
-          score: newReview.score
-        })
-      }
-    }
 
-  });
+  if (Array.isArray(req.body)) {
+    console.log('Received data is an array')
+    req.body.forEach(newReview => {
+      const dramaNameKey = newReview.dramaName.replace(/\s+/g, '_'); // Replace spaces with underscores
+      // each item in userReviews array is an object that consists of single key that is just the drama name
+      const existingDramaIndex = userReviews.findIndex(item => item.hasOwnProperty(dramaNameKey));
+      // STEP 1: check if userReviews have drama object that has SINGLE key with dramaNameKey
+      if (existingDramaIndex === -1) {
+        // creating drama very first entry with 1st review
+        // Happens ONCE!!
+        const newDramaEntry = {
+          [dramaNameKey]: [{
+            reviewer: newReview.reviewer,
+            score: newReview.score
+          }]
+        }
+        userReviews.push(newDramaEntry)
+        // STEP 1.5: key === dramaNameKey now we:
+        // a) add new review
+        // b) edit existing review
+      } else {  
+        console.log('elseeeeeee...')
+        // CASE B: update an existing review object
+        const existingReviewerIndex = userReviews[existingDramaIndex][dramaNameKey].findIndex(reviewerObj => reviewerObj.reviewer === newReview.reviewer)
+        // console.log('elseee INDEX --->', existingReviewerIndex)
+        // console.log('1 --->', userReviews);
+        // console.log('2 --->', userReviews[existingDramaIndex]);
+        // console.log('3 --->', userReviews[existingDramaIndex][dramaNameKey]);
+  
+        if (existingReviewerIndex >= 0) {
+          console.log('EDIT REVIEW...')
+          console.log('checking:', userReviews[existingDramaIndex][dramaNameKey][existingReviewerIndex])
+          console.log('new value:', newReview)
+          userReviews[existingDramaIndex][dramaNameKey][existingReviewerIndex].score = newReview.score
+        }
+        // CASE A: add a brand new review
+        if (existingReviewerIndex === -1) {
+          console.log('NEW REVIEW...')
+          console.log('new reviewer obj:', newReview)
+          userReviews[existingDramaIndex][dramaNameKey].push({
+            reviewer: newReview.reviewer,
+            score: newReview.score
+          })
+        }
+      }
+  
+    });
+  }
   console.log('END userReviews[0]:', userReviews[0])
   console.log('END userReviews[1]:', userReviews[1])
   res.sendStatus(200);
