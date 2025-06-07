@@ -18,14 +18,35 @@ let userReviews = [];
 // });
 
 app.post('/api/userreviews', (req, res) => {
-  console.log('req.body --->', req.body)
-  if (typeof req.body === 'string') {
-    console.log('Received data is a string')
+  console.log('REQ.BODY --->', req.body)
+  console.log('userReviews --->', userReviews)
+
+  // if user clicks on add comment button in extension code
+  if ('myNotes' in req.body && 'reviewer' in req.body && 'dramaName' in req.body) {
+    const dramaNameKey = req.body.dramaName.replace(/\s+/g, '_');
+    console.log('RECEIVED DATA = Comment')
+    // STEP 1 does drama object exists in userReviews array
+    const searchDramaIndex = userReviews.findIndex(item => {
+      return item.hasOwnProperty(dramaNameKey)
+    })
+    console.log('searchDramaIndex ---->', searchDramaIndex)
+    console.log('userReviews[searchDramaIndex] --->', userReviews[searchDramaIndex])
+
+    // STEP 2 search correct review
+    // 2.1 by reviewer name
+    const searchReviewIndex = userReviews[searchDramaIndex][dramaNameKey].findIndex(item => {
+      console.log('inspecting:', item)
+      return item.reviewer === req.body.reviewer
+    })
+    console.log('searchReviewIndex --->', searchReviewIndex)
+    // 2.2 update review object
+    const actualReview = userReviews[searchDramaIndex][dramaNameKey][searchReviewIndex]
+    console.log('we should update --->', actualReview)
+    actualReview.myNotes = req.body.myNotes
   }
 
-
   if (Array.isArray(req.body)) {
-    console.log('Received data is an array')
+    console.log('RECEIVED DATA = Array')
     req.body.forEach(newReview => {
       const dramaNameKey = newReview.dramaName.replace(/\s+/g, '_'); // Replace spaces with underscores
       // each item in userReviews array is an object that consists of single key that is just the drama name
@@ -44,7 +65,7 @@ app.post('/api/userreviews', (req, res) => {
         // STEP 1.5: key === dramaNameKey now we:
         // a) add new review
         // b) edit existing review
-      } else {  
+      } else {
         console.log('elseeeeeee...')
         // CASE B: update an existing review object
         const existingReviewerIndex = userReviews[existingDramaIndex][dramaNameKey].findIndex(reviewerObj => reviewerObj.reviewer === newReview.reviewer)
@@ -52,7 +73,7 @@ app.post('/api/userreviews', (req, res) => {
         // console.log('1 --->', userReviews);
         // console.log('2 --->', userReviews[existingDramaIndex]);
         // console.log('3 --->', userReviews[existingDramaIndex][dramaNameKey]);
-  
+
         if (existingReviewerIndex >= 0) {
           console.log('EDIT REVIEW...')
           console.log('checking:', userReviews[existingDramaIndex][dramaNameKey][existingReviewerIndex])
@@ -69,7 +90,7 @@ app.post('/api/userreviews', (req, res) => {
           })
         }
       }
-  
+
     });
   }
   console.log('END userReviews[0]:', userReviews[0])
