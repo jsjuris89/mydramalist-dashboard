@@ -1,116 +1,61 @@
 const express = require('express');
 const cors = require('cors');
+const PORT = 3000;
 const app = express();
-
-// Middleware
 app.use(cors()); // Allow requests from extension
-app.use(express.json()); // Parse JSON body
-app.use(express.text()); // This handles text/plain content-type
+app.use(express.json()); 
 
-let storedData = [];
-let userReviews = [];
-
-// POST endpoint for dataScraper.js
-// app.post('/api/data', (req, res) => {
-//   console.log('Received data from /api/data:', req.body);
-//   storedData.push(req.body) // save data before we can send it to client
-//   res.sendStatus(200);
-// });
+let userReviews = {};
 
 app.post('/api/userreviews', (req, res) => {
   console.log('REQ.BODY --->', req.body)
-  console.log('userReviews --->', userReviews)
+  const dramaNameKey = req.body.dramaName.replace(/\s+/g, '_');
+  userReviews[dramaNameKey] ??= []
+  const dramaReviews = userReviews[dramaNameKey]
 
-  // if user clicks on add comment button in extension code
-  if ('myNotes' in req.body && 'reviewer' in req.body && 'dramaName' in req.body) {
-    const dramaNameKey = req.body.dramaName.replace(/\s+/g, '_');
-    console.log('RECEIVED DATA = Comment')
-    // STEP 1 does drama object exists in userReviews array
-    const searchDramaIndex = userReviews.findIndex(item => {
-      return item.hasOwnProperty(dramaNameKey)
-    })
-    console.log('searchDramaIndex ---->', searchDramaIndex)
-    console.log('userReviews[searchDramaIndex] --->', userReviews[searchDramaIndex])
-
-    // STEP 2 search correct review
-    // 2.1 by reviewer name
-    const searchReviewIndex = userReviews[searchDramaIndex][dramaNameKey].findIndex(item => {
-      console.log('inspecting:', item)
-      return item.reviewer === req.body.reviewer
-    })
-    console.log('searchReviewIndex --->', searchReviewIndex)
-    // 2.2 update review object
-    const actualReview = userReviews[searchDramaIndex][dramaNameKey][searchReviewIndex]
-    console.log('we should update --->', actualReview)
-    actualReview.myNotes = req.body.myNotes
-  }
-
-  if (Array.isArray(req.body)) {
-    console.log('RECEIVED DATA = Array')
-    req.body.forEach(newReview => {
-      const dramaNameKey = newReview.dramaName.replace(/\s+/g, '_'); // Replace spaces with underscores
-      // each item in userReviews array is an object that consists of single key that is just the drama name
-      const existingDramaIndex = userReviews.findIndex(item => item.hasOwnProperty(dramaNameKey));
-      // STEP 1: check if userReviews have drama object that has SINGLE key with dramaNameKey
-      if (existingDramaIndex === -1) {
-        // creating drama very first entry with 1st review
-        // Happens ONCE!!
-        const newDramaEntry = {
-          [dramaNameKey]: [{
-            reviewer: newReview.reviewer,
-            score: newReview.score
-          }]
-        }
-        userReviews.push(newDramaEntry)
-        // STEP 1.5: key === dramaNameKey now we:
-        // a) add new review
-        // b) edit existing review
+  // ADD SCORE
+  if (Array.isArray(req.body.reviews)) {
+    req.body.reviews.forEach(newReview => {
+      const found = dramaReviews.find(item => item.reviewer === newReview.reviewer)
+      // console.log('found', found)
+      if (!found) {
+        dramaReviews.push(newReview)
       } else {
-        console.log('elseeeeeee...')
-        // CASE B: update an existing review object
-        const existingReviewerIndex = userReviews[existingDramaIndex][dramaNameKey].findIndex(reviewerObj => reviewerObj.reviewer === newReview.reviewer)
-        // console.log('elseee INDEX --->', existingReviewerIndex)
-        // console.log('1 --->', userReviews);
-        // console.log('2 --->', userReviews[existingDramaIndex]);
-        // console.log('3 --->', userReviews[existingDramaIndex][dramaNameKey]);
-
-        if (existingReviewerIndex >= 0) {
-          console.log('EDIT REVIEW...')
-          console.log('checking:', userReviews[existingDramaIndex][dramaNameKey][existingReviewerIndex])
-          console.log('new value:', newReview)
-          userReviews[existingDramaIndex][dramaNameKey][existingReviewerIndex].score = newReview.score
-        }
-        // CASE A: add a brand new review
-        if (existingReviewerIndex === -1) {
-          console.log('NEW REVIEW...')
-          console.log('new reviewer obj:', newReview)
-          userReviews[existingDramaIndex][dramaNameKey].push({
-            reviewer: newReview.reviewer,
-            score: newReview.score
-          })
+        // only updating score that changed nothing else
+        if (found.score !== newReview.score) {
+          found.score = newReview.score
+          console.log('Update', found)
+          // console.log(dramaReviews)
         }
       }
-
     });
   }
-  console.log('END userReviews[0]:', userReviews[0])
-  console.log('END userReviews[1]:', userReviews[1])
+
+  // ADD COMMENT
+  if (req.body.review && 'myNotes' in req.body.review) {
+    console.log('Comment')
+    const found = dramaReviews.find(el => el.reviewer === req.body.review.reviewer)
+    if (found) {
+      found.myNotes = req.body.review.myNotes
+      console.log('Update', dramaReviews.find(el => el.reviewer === req.body.review.reviewer))
+    } 
+  }
   res.sendStatus(200);
 });
 
-app.get('/api/data', (req, res) => {
-  console.log('get /api/data run')
-  res.json(storedData);  // send data to client
-});
 
-app.get('/api/userreviews', (req, res) => {
-  console.log('get /api/userreviews run')
-  res.json(userReviews)
+app.post('/api/hide', (req, res) => {
+  console.log('/api/hide run')
+  const { title } = req.body
+  const dramaNameKey = title.replace(/\s+/g, '_')
+  const reviewers = userReviews[dramaNameKey]
+  // TODO: fix undefined map error
+  const reviewersNamesOnly = reviewers.map(item => item.reviewer)
+  console.log(reviewersNamesOnly)
+  res.json(reviewersNamesOnly)
 })
 
 
-// Start server
-const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
