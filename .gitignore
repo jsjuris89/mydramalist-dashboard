@@ -1,4 +1,5 @@
 node_modules/
+.vscoden
 temp.js
 reviews.db
 
